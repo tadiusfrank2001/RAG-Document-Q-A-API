@@ -8,6 +8,10 @@ from pathlib import Path
 class Settings(BaseSettings):
     """Application settings"""
     
+    # Environment Setting
+
+    environment: Literal["development", "staging", "production"] = "development"
+
     # API Settings
     app_name: str = "RAG MVP API"
     debug: bool = True
@@ -33,7 +37,32 @@ class Settings(BaseSettings):
     
     # RAG Settings
     retrieval_top_k: int = 5
-    
+
+
+    # --------------------------------------
+    # Derived / Environment-aware properties
+    # -------------------------------------
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
+
+    @property
+    def debug_mode(self) -> bool:
+        return not self.is_production
+
+    @property
+    def chroma_dir(self) -> str:
+        """Isolate vector DB per environment"""
+        return f"{self.chroma_persist_dir}_{self.environment}"
+
+    @property
+    def effective_top_k(self) -> int:
+        """Faster iteration in dev, higher recall in prod"""
+        if self.environment == "development":
+            return min(self.retrieval_top_k, 3)
+        return self.retrieval_top_k
+
     class Config:
         env_file = ".env"
         case_sensitive = False
