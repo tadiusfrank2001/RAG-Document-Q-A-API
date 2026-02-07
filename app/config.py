@@ -1,6 +1,17 @@
 """
-Configuration for RAG MVP
+Configuration for RAG MVP using Pydantic.
+
+This module defines application-level settings for the RAG MVP API,
+including API configuration, document processing, vector store paths,
+and RAG-specific parameters. It uses Pydantic's BaseSettings to
+validate and manage environment variables. 
+
+Derived properties provide environment-aware behavior, such as
+debug mode toggling, vector store isolation, and safe retrieval
+parameter adjustment. This ensures the RAG pipeline is consistent
+and safe across development, staging, and production environments.
 """
+
 from pydantic_settings import BaseSettings
 from pathlib import Path
 
@@ -45,25 +56,54 @@ class Settings(BaseSettings):
 
     @property
     def is_production(self) -> bool:
+        """Check if the current environment is production.
+
+        Returns:
+            bool: True if environment is 'production', False otherwise.
+        """
         return self.environment == "production"
+
 
     @property
     def debug_mode(self) -> bool:
+        """Determine if debug mode should be enabled based on environment.
+
+        Debug is disabled in production and enabled in other environments.
+
+        Returns:
+            bool: True if debug mode should be active, False otherwise.
+        """
         return not self.is_production
+
 
     @property
     def chroma_dir(self) -> str:
-        """Isolate vector DB per environment"""
+        """Get the environment-specific vector store directory.
+
+        Appends the environment name to the base Chroma directory to
+        prevent dev/prod data contamination.
+
+        Returns:
+            str: Full path to the environment-specific Chroma DB directory.
+        """
         return f"{self.chroma_persist_dir}_{self.environment}"
 
     @property
     def effective_top_k(self) -> int:
-        """Faster iteration in dev, higher recall in prod"""
+        """Compute a safe top-k value for document retrieval based on environment.
+
+        In development, limits top_k to 3 for faster iteration. In production,
+        uses the configured retrieval_top_k value.
+
+        Returns:
+            int: Number of top document chunks to retrieve.
+        """
         if self.environment == "development":
             return min(self.retrieval_top_k, 3)
         return self.retrieval_top_k
 
     class Config:
+        """Pydantic configuration for environment loading and case sensitivity."""
         env_file = ".env"
         case_sensitive = False
 
