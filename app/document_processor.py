@@ -158,4 +158,3 @@ class DocumentProcessor:
 
         return f"doc_{file_hash[:12]}"
     
-
