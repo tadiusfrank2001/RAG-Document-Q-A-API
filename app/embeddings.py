@@ -47,3 +47,57 @@ class EmbeddingService:
         print(f"Model loaded. Embedding dimension: {self.dimension}")
 
 
+
+    def embed_text(self, text: str) -> List[float]:
+        """Generate an embedding for a single text input.
+
+        This method is typically used for embedding individual document
+        chunks prior to storage in the vector database.
+
+        Args:
+            text (str): Text to embed.
+
+        Returns:
+            List[float]: High-dimensional embedding vector representing
+            the semantic meaning of the input text.
+        """
+        embedding = self.model.encode(text, convert_to_numpy=True)
+        return embedding.tolist()
+    
+
+
+    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+        """Generate embeddings for a batch of text inputs.
+
+        Batch embedding improves throughput when processing multiple
+        document chunks during ingestion.
+
+        Args:
+            texts (List[str]): List of text strings to embed.
+
+        Returns:
+            List[List[float]]: List of embedding vectors corresponding
+            to each input text.
+        """
+        embeddings = self.model.encode(
+            texts,
+            convert_to_numpy=True,
+            show_progress_bar=True
+        )
+        return embeddings.tolist()
+
+    
+    def embed_query(self, query: str) -> List[float]:
+        """Generate an embedding for a search query.
+
+        Queries must be embedded using the same model as document chunks
+        to ensure valid similarity comparisons during retrieval.
+
+        Args:
+            query (str): User search query.
+
+        Returns:
+            List[float]: Embedding vector for the query.
+        """
+        return self.embed_text(query)
+    
