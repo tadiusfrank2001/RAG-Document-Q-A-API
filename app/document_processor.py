@@ -49,5 +49,95 @@ class DocumentProcessor:
             length_function=len,
             separators=["\n\n", "\n", " ", ""]
         )
+
+    def extract_text_from_pdf(self, pdf_path: str) -> str:
+        """Extract all textual content from a PDF file.
+
+        Args:
+            pdf_path (str): Path to the PDF file.
+
+        Returns:
+            str: Extracted text content from all pages.
+
+        Raises:
+            ValueError: If text extraction fails.
+        """
+        try:
+            reader = PdfReader(pdf_path)
+            text = ""
+
+            for page in reader.pages:
+                text += page.extract_text() + "\n"
+
+            return text.strip()
+
+        except Exception as exc:
+            raise ValueError(
+                f"Failed to extract text from PDF: {str(exc)}"
+            ) from exc
+        
+
+    def chunk_text(self, text: str) -> List[str]:
+        """Split raw text into overlapping chunks.
+
+        Chunking improves retrieval quality by balancing semantic
+        completeness with embedding efficiency.
+
+        Args:
+            text (str): Full extracted document text.
+
+        Returns:
+            List[str]: List of text chunks.
+        """
+        return self.splitter.split_text(text)
     
 
+    def process_document(
+        self,
+        file_path: str,
+        filename: str
+    ) -> Dict[str, Any]:
+        """Process a PDF document into structured chunks and metadata.
+
+        This method orchestrates the full ingestion flow:
+        extraction → validation → chunking → metadata generation.
+
+        Args:
+            file_path (str): Path to the PDF file on disk.
+            filename (str): Original uploaded filename.
+
+        Returns:
+            Dict[str, Any]: A structured representation of the document
+            containing:
+                - doc_id (str): Stable document identifier
+                - filename (str): Original filename
+                - chunks (List[str]): Text chunks for embedding
+                - metadata (Dict): Document-level metadata
+
+        Raises:
+            ValueError: If the PDF contains insufficient or no text.
+        """
+        doc_id = self._generate_doc_id(file_path)
+
+        text = self.extract_text_from_pdf(file_path)
+
+        if not text or len(text) < 10:
+            raise ValueError(
+                "PDF appears to be empty or has no extractable text"
+            )
+
+        chunks = self.chunk_text(text)
+
+        metadata = {
+            "filename": filename,
+            "total_chars": len(text),
+            "num_chunks": len(chunks),
+        }
+
+        return {
+            "doc_id": doc_id,
+            "filename": filename,
+            "chunks": chunks,
+            "metadata": metadata,
+        }
+    
