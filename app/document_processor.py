@@ -141,3 +141,21 @@ class DocumentProcessor:
             "metadata": metadata,
         }
     
+    def _generate_doc_id(self, file_path: str) -> str:
+        """Generate a stable document ID based on file content.
+
+        Using a content hash ensures deterministic IDs and prevents
+        duplicate indexing of identical documents.
+
+        Args:
+            file_path (str): Path to the PDF file.
+
+        Returns:
+            str: Deterministic document identifier.
+        """
+        with open(file_path, "rb") as file:
+            file_hash = hashlib.md5(file.read()).hexdigest()
+
+        return f"doc_{file_hash[:12]}"
+    
+
