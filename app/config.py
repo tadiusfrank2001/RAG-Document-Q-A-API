@@ -14,6 +14,7 @@ and safe across development, staging, and production environments.
 
 from pydantic_settings import BaseSettings
 from pathlib import Path
+from typing import Literal
 
 
 class Settings(BaseSettings):
