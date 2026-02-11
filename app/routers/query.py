@@ -157,4 +157,3 @@ async def query_documents(request: QueryRequest) -> QueryResponse:
             detail=f"Error processing query: {str(e)}"
         )
     
-
