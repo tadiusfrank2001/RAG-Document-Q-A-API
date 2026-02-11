@@ -6,7 +6,7 @@ python-multipart==0.0.9
 # Document Processing
 pypdf==4.0.1
 langchain==0.1.9
-langchain-text-splitters==0.0.1
+langchain-text-splitters==1.1.0
 
 # Embeddings & Vector Store
 sentence-transformers==2.3.1
